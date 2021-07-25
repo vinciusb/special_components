@@ -1,8 +1,6 @@
 # Special Components
 
 Collection of special components created using React.
-<br></br>
-
 
 # Components
 
