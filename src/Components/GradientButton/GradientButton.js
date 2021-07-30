@@ -1,12 +1,13 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import clsx from 'clsx';
 
 import { makeStyles } from '@material-ui/core';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 const startRadius = 40;
 
-const useStyles = makeStyles({
+const buttonStyles = makeStyles({
     GradientButton: {
         background: props => `linear-gradient(30deg, rgb(${props.gradStart[0]}, ${props.gradStart[1]}, ${props.gradStart[2]}), rgb(${props.gradEnd[0]}, ${props.gradEnd[1]}, ${props.gradEnd[2]}))`,
         color: props => `rgb(${props.color[0]}, ${props.color[1]}, ${props.color[2]})`,
@@ -18,77 +19,74 @@ const useStyles = makeStyles({
         fontSize: props => `${props.fontSize}px`,
         fontFamily: props => props.font,
         boxSizing: 'border-box',
-        // overflow: 'hidden',
+        overflow: 'hidden',
         position: 'relative',
         '&:hover': {
             cursor: 'pointer',
         }
-    },
-    Circle: {
-        width: props => `${2 * props.circleRadius}px`,
-        height: props => `${2 * props.circleRadius}px`,
-        backgroundColor: 'rgb(255,255,0, 0.5)',
-        position: 'absolute',
-        left: props => `${props.circleOffsets.left}px`,
-        top: props => `${props.circleOffsets.top}px`,
-        borderRadius: '50%',
-        opacity: props => props.circleIsGrowing ? '1' : '0',
-        transition: `opacity 0.1s ease-in, width 2s, height 2s`,
-        pointerEvents: 'none',
     }
 });
-// , top 2s, left 2s
 
 function GradientButton(props) {
-    const [circleIsGrowing, setCircleIsGrowing] = useState(false);
-    const [circleRadius, setCircleRadius] = useState(startRadius);
-    const [circleOffsets, setCircleOffsets] = useState({ top: -startRadius, left: -startRadius });
+    const [clickInfo, setClickInfo] = useState();
+    const [aniIsRunning, setAniIsRunning] = useState(false);
 
-    // TODO: Fazer função pra achar menor círculo que inscreva tal butão
-    const drawCircle = (e) => {
+    const handleClick = (e) => {
         const rect = e.target.getBoundingClientRect();
         // Obtem posição inicial do click
         const clickX = e.clientX - rect.left;
         const clickY = e.clientY - rect.top;
 
-        // setCircleOffsets({ top: clickY - startRadius, left: clickX - startRadius });
-
-        var growX, growY;
-        //  Obtem maior distancia do eixo x
-        if(clickX < rect.width / 2) growX = rect.width - clickX;
-        else growX = clickX;
-
-        //  Obtem maior distancia do eixo y
-        if(clickY < rect.height / 2) growY = rect.height - clickY;
-        else growY = clickY;
-
-        const newRadius = Math.sqrt(Math.pow(growX, 2) + Math.pow(growY, 2));
-        
-        // Calcula posição inicial do circulo
-        const top = clickY - newRadius;
-        const left = clickX - newRadius;
-        
-        setCircleRadius(newRadius);
-        setCircleOffsets({ top, left });
+        setClickInfo({ left: clickX - startRadius, top: clickY - startRadius});
+        setAniIsRunning(true);
+        setTimeout(() => {setAniIsRunning(false)}, 500);
     };
 
-    const handleClick = (e) => {
-        if(!circleIsGrowing) {
-            drawCircle(e);
-            setCircleIsGrowing(true);
-            // setTimeout(() => { setCircleIsGrowing(false) }, 1000);
-
-            // Faz ação da callback de entrada
-            props.onClick();
-        }
-    };
-
-    const classes = useStyles({ ...props, circleIsGrowing, circleRadius, circleOffsets });
+    const classes = buttonStyles({ ...props });
     return (
         <div className={ classes.GradientButton } onClick={ handleClick }>
             { props.text }
-            <div className={ classes.Circle }></div>
+            { aniIsRunning && <RippleDiv clickPoint={ clickInfo } /> }
         </div>
+    );
+}
+
+const rippleStyles = makeStyles({
+    Circle: {
+        pointerEvents: 'none',
+        width: props => `${2 * props.circleRadius}px`,
+        height: props => `${2 * props.circleRadius}px`,
+        left: props => `${ props.clickPoint.left }px`,
+        top: props => `${ props.clickPoint.top }px`,
+        backgroundColor: 'rgb(255,255,255,0.4)',
+        position: 'absolute',
+        borderRadius: '50%',
+        animation: '$ripple 0.5s ease-out forwards',
+    },
+    '@keyframes ripple': {
+        'from': {
+            opacity: '1'
+        },
+        'to': {
+            opacity: '0',
+            transform: 'scale(4)',
+        }
+    },
+});
+
+function RippleDiv(props) {
+    const [circleRadius, setCircleRadius] = useState(startRadius);
+
+    useEffect(() => {
+
+    }, []);
+
+    const ripple = (e) => {
+    };
+
+    const classes = rippleStyles({ ...props, circleRadius });
+    return (
+        <div className={ classes.Circle }></div>
     );
 }
 
@@ -111,3 +109,21 @@ GradientButton.propTypes = {
 };
 
 export default GradientButton;
+
+// TODO: Fazer função pra achar menor círculo que inscreva tal butão
+// const growCircle = (data) => {
+//     var growX, growY;
+//     //  Obtem maior distancia do eixo x
+//     if(data.clickX < data.rect.width / 2) growX = data.rect.width - data.clickX;
+//     else growX = data.clickX;
+
+//     //  Obtem maior distancia do eixo y
+//     if(data.clickY < data.rect.height / 2) growY = data.rect.height - data.clickY;
+//     else growY = data.clickY;
+
+//     const newRadius = Math.sqrt(Math.pow(growX, 2) + Math.pow(growY, 2));
+
+//     // Calcula posição inicial do circulo
+//     const top = data.clickY - newRadius;
+//     const left = data.clickX - newRadius;
+// };
