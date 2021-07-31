@@ -1,9 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import clsx from 'clsx';
 
 import { makeStyles } from '@material-ui/core';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 
 const startRadius = 40;
 
@@ -23,6 +22,11 @@ const buttonStyles = makeStyles({
         position: 'relative',
         '&:hover': {
             cursor: 'pointer',
+        },
+        '& *': {
+            margin: '0px',
+            userSelect: 'none',
+            pointerEvents: 'none',
         }
     }
 });
@@ -37,15 +41,30 @@ function GradientButton(props) {
         const clickX = e.clientX - rect.left;
         const clickY = e.clientY - rect.top;
 
-        setClickInfo({ left: clickX - startRadius, top: clickY - startRadius});
+        //  Obtem maior distancia do eixo x
+        var growX, growY;
+        if(clickX < rect.width / 2) growX = rect.width - clickX;
+        else growX = clickX;
+
+        //  Obtem maior distancia do eixo y
+        if(clickY < rect.height / 2) growY = rect.height - clickY;
+        else growY = clickY;
+    
+        const farthestCorner = Math.sqrt(Math.pow(growX, 2) + Math.pow(growY, 2));
+
+        setClickInfo({ left: clickX , top: clickY, farCorner: farthestCorner });
         setAniIsRunning(true);
-        setTimeout(() => {setAniIsRunning(false)}, 500);
+        setTimeout(() => { setAniIsRunning(false); }, 600);
+
+        // Faz ação proposta para o click
+        props.onClick();
     };
 
     const classes = buttonStyles({ ...props });
+    const className = `${props.className} ${classes.GradientButton}`
     return (
-        <div className={ classes.GradientButton } onClick={ handleClick }>
-            { props.text }
+        <div className={ className } onClick={ handleClick }>
+            <p>{ props.text }</p>
             { aniIsRunning && <RippleDiv clickPoint={ clickInfo } /> }
         </div>
     );
@@ -53,15 +72,15 @@ function GradientButton(props) {
 
 const rippleStyles = makeStyles({
     Circle: {
-        pointerEvents: 'none',
         width: props => `${2 * props.circleRadius}px`,
         height: props => `${2 * props.circleRadius}px`,
-        left: props => `${ props.clickPoint.left }px`,
-        top: props => `${ props.clickPoint.top }px`,
+        left: props => `${ props.circleOffsets.left }px`,
+        top: props => `${ props.circleOffsets.top }px`,
         backgroundColor: 'rgb(255,255,255,0.4)',
         position: 'absolute',
         borderRadius: '50%',
         animation: '$ripple 0.5s ease-out forwards',
+        transition: 'width 0.5s ease-out, height 0.5s ease-out, left 0.5s ease-out, top 0.5s ease-out',
     },
     '@keyframes ripple': {
         'from': {
@@ -69,22 +88,20 @@ const rippleStyles = makeStyles({
         },
         'to': {
             opacity: '0',
-            transform: 'scale(4)',
         }
     },
 });
 
 function RippleDiv(props) {
     const [circleRadius, setCircleRadius] = useState(startRadius);
+    const [circleOffsets, setCircleOffsets] = useState({ left: props.clickPoint.left - startRadius, top: props.clickPoint.top - startRadius });
 
     useEffect(() => {
+        setCircleRadius(props.clickPoint.farCorner);
+        setCircleOffsets({ left: props.clickPoint.left - props.clickPoint.farCorner, top: props.clickPoint.top - props.clickPoint.farCorner });
+    }, [props]);
 
-    }, []);
-
-    const ripple = (e) => {
-    };
-
-    const classes = rippleStyles({ ...props, circleRadius });
+    const classes = rippleStyles({ ...props, circleRadius, circleOffsets });
     return (
         <div className={ classes.Circle }></div>
     );
@@ -93,6 +110,7 @@ function RippleDiv(props) {
 GradientButton.defaultProps = {
     onClick: () => {},
     font: 'inherit',
+    className: '',
     color: [255, 255, 255],
     gradStart: [0, 0, 255],
     gradEnd: [255, 0, 0],
@@ -102,6 +120,7 @@ GradientButton.propTypes = {
     onClick: PropTypes.func,
     text: PropTypes.string.isRequired,
     font: PropTypes.string,
+    className: PropTypes.string,
     fontSize: PropTypes.number.isRequired,
     color: PropTypes.array,
     gradStart: PropTypes.array,
@@ -109,21 +128,3 @@ GradientButton.propTypes = {
 };
 
 export default GradientButton;
-
-// TODO: Fazer função pra achar menor círculo que inscreva tal butão
-// const growCircle = (data) => {
-//     var growX, growY;
-//     //  Obtem maior distancia do eixo x
-//     if(data.clickX < data.rect.width / 2) growX = data.rect.width - data.clickX;
-//     else growX = data.clickX;
-
-//     //  Obtem maior distancia do eixo y
-//     if(data.clickY < data.rect.height / 2) growY = data.rect.height - data.clickY;
-//     else growY = data.clickY;
-
-//     const newRadius = Math.sqrt(Math.pow(growX, 2) + Math.pow(growY, 2));
-
-//     // Calcula posição inicial do circulo
-//     const top = data.clickY - newRadius;
-//     const left = data.clickX - newRadius;
-// };
