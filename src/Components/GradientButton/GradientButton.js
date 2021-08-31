@@ -44,11 +44,11 @@ const Styled = {
         background-color: rgb(255,255,255,0.4);
         position: absolute;
         border-radius: 50%;
-        animation: ${Ripple} 0.5s ease-out forwards;
-        transition: width 0.5s ease-out,
-                    height 0.5s ease-out,
-                    left 0.5s ease-out,
-                    top 0.5s ease-out;
+        animation: ${Ripple} 0.25s ease-out forwards;
+        transition: width 0.25s ease-out,
+                    height 0.25s ease-out,
+                    left 0.25s ease-out,
+                    top 0.25s ease-out;
     `,
 };
 
