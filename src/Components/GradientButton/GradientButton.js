@@ -81,7 +81,7 @@ function GradientButton({
         setTimeout(() => { setAniIsRunning(false); }, 600);
 
         // Faz ação proposta para o click
-        onClick();
+        onClick(e);
     };
 
     return (
